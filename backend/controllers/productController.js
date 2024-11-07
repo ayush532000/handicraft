@@ -6,8 +6,15 @@ export const getProductsByTypeAndCategory = async (req, res) => {
   try {
     const { productType, productCategory } = req.query;
     console.log('Fetching products with:', { productType, productCategory });
+    
+    // Find without any conditions first
+    const allProducts = await Product.find();
+    console.log('All products:', JSON.stringify(allProducts, null, 2));
+
+    // Then try our filtered query
     const products = await Product.find({ productType, productCategory });
-    console.log('Found products:', products.length);
+    console.log('Filtered products:', JSON.stringify(products, null, 2));
+    
     res.json(products);
   } catch (error) {
     console.error('Error in getProductsByTypeAndCategory:', error);
