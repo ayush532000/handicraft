@@ -18,7 +18,7 @@ export default function ProductList({ productType, productCategory }) {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/products?productType=${productType}&productCategory=${productCategory}`
+          `${import.meta.env.VITE_API_URL}/products?productType=${productType}&productCategory=${productCategory}`
         );
         
         if (!response.ok) {

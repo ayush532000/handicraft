@@ -16,7 +16,7 @@ export default function ProductDetails({ product, onBack }) {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/products/${product.productId}/images`
+          `${import.meta.env.VITE_API_URL}/products/${product.productId}/images`
         );
         
         if (!response.ok) {
