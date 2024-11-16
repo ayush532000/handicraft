@@ -15,7 +15,7 @@ export default function Header() {
           <Link 
             to="/" 
             onClick={resetToHome}
-            className="flex items-center space-x-4 group hover:opacity-90 transition-opacity"
+            className="flex items-center space-x-4 group"
           >
             <motion.img 
               src="https://res.cloudinary.com/digi69oig/image/upload/v1729790758/logo_nyoro2.jpg" 
@@ -31,7 +31,7 @@ export default function Header() {
               >
                 Innovative India
               </motion.h1>
-              <p className="text-sm text-primary-600 font-light">Crafting Excellence</p>
+              <p className="text-sm text-primary-600">you dream we manufacture</p>
             </div>
           </Link>
 

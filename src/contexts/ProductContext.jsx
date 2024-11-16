@@ -7,25 +7,31 @@ const ProductContext = createContext();
 export function ProductProvider({ children }) {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [currentView, setCurrentView] = useState('home');
+  const [navigationSource, setNavigationSource] = useState(null); // New state for tracking source
 
   const resetToHome = () => {
     setCurrentProduct(null);
     setCurrentView('home');
+    setNavigationSource(null);
   };
 
-  const showProductList = (type, category) => {
-    // Force reset current product to ensure product list is shown
+  const showProductList = (type, category, source = 'menu') => {
     setCurrentProduct({
       type: type,
       category: category,
-      forceRefresh: Date.now() // Add this to force re-render when same type is selected
+      forceRefresh: Date.now()
     });
     setCurrentView('product');
+    setNavigationSource(source); // Track where user came from
+  };
+
+  const showProductDetails = (product) => {
+    setCurrentProduct(product);
+    setCurrentView('product-details');
   };
 
   const setView = (view) => {
     setCurrentView(view);
-    setCurrentProduct(null);
   };
 
   return (
@@ -33,10 +39,13 @@ export function ProductProvider({ children }) {
       value={{ 
         currentProduct, 
         currentView,
+        navigationSource,
         resetToHome,
         showProductList,
+        showProductDetails,
         setView,
-        setCurrentProduct
+        setCurrentProduct,
+        setNavigationSource
       }}
     >
       {children}

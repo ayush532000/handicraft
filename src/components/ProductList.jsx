@@ -1,24 +1,29 @@
 // src/components/ProductList.jsx
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { API_URL } from '../config/api';
 import ProductDetails from './ProductDetails';
+import { useProduct } from '../contexts/ProductContext';
 import SEO from './SEO';
+import { categories } from '../config/categories';
 
 export default function ProductList({ productType, productCategory }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const navigate = useNavigate();
+  const { navigationSource } = useProduct();
 
   useEffect(() => {
-    setSelectedProduct(null);
-    
     const fetchProducts = async () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/products?productType=${productType}&productCategory=${productCategory}`
+          `${API_URL}/products?category=${productCategory}&type=${productType}`
         );
         
         if (!response.ok) {
@@ -39,83 +44,98 @@ export default function ProductList({ productType, productCategory }) {
     }
   }, [productType, productCategory]);
 
+  // Helper function to get category details
+  const getCategoryFromName = (categoryName) => {
+    return Object.values(categories).find(cat => cat.name === categoryName);
+  };
+
+  // Helper function to get display name for type
+  const getTypeDisplayName = (type) => {
+    const category = getCategoryFromName(productCategory);
+    return category ? category.displayItems[type] : type;
+  };
+
   if (selectedProduct) {
-    return (
-      <ProductDetails 
-        product={selectedProduct} 
-        onBack={() => setSelectedProduct(null)} 
-      />
-    );
+    return <ProductDetails product={selectedProduct} onBack={() => setSelectedProduct(null)} />;
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center p-8 text-red-500">
-        <p className="text-lg">{error}</p>
-      </div>
-    );
-  }
-
-  if (!products.length) {
-    return (
-      <div className="text-center p-8 text-primary-600">
-        <p className="text-lg">No products found</p>
-      </div>
-    );
-  }
+  const displayTitle = getTypeDisplayName(productType);
 
   return (
     <>
-      <SEO
-        title={`${productType} Collection | Handicraft Store`}
-        description={`Browse our collection of handcrafted ${productType.toLowerCase()}s. Each piece is uniquely crafted with traditional techniques.`}
+      <SEO 
+        title={`${displayTitle} Collection | Innovative India`}
+        description={`Browse our collection of handcrafted ${displayTitle.toLowerCase()}. Each piece is uniquely crafted with traditional techniques.`}
       />
-      
-      <div className="container mx-auto py-8 relative z-0">
-        <motion.h2 
+
+      <div className="container mx-auto py-8 px-4">
+        {/* Show back button only if user came from category types */}
+        {navigationSource === 'category-types' && (
+          <motion.button 
+            onClick={() => {
+              const category = getCategoryFromName(productCategory);
+              const categoryKey = Object.keys(categories).find(key => 
+                categories[key].name === category.name
+              );
+              navigate(`/category/${categoryKey}`);
+            }}
+            className="flex items-center text-primary-600 hover:text-primary-800 transition-colors mb-8 group"
+            whileHover={{ x: -5 }}
+          >
+            <ArrowLeft className="mr-2 group-hover:animate-pulse" size={24} />
+            <span className="font-medium">Back to {getCategoryFromName(productCategory)?.displayName} Types</span>
+          </motion.button>
+        )}
+
+        <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-display text-primary-800 text-center mb-8"
+          className="text-3xl font-display text-primary-800 text-center mb-12"
         >
-          {productType} Collection
-        </motion.h2>
-        
-        <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 px-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, staggerChildren: 0.1 }}
-        >
-          {products.map((product) => (
-            <motion.div 
-              key={product.productId}
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
-              onClick={() => setSelectedProduct(product)}
-            >
-              <div className="aspect-w-4 aspect-h-3">
-                <img 
-                  src={product.productImage} 
-                  alt={product.productName}
-                  className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
-                />
+          {displayTitle}
+        </motion.h1>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="w-full h-48 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
               </div>
-              <div className="p-4 text-center">
-                <h3 className="text-lg font-medium text-primary-800">
-                  {product.productName}
-                </h3>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500 py-8">{error}</div>
+        ) : !products.length ? (
+          <div className="text-center text-gray-500 py-8">No products found</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <motion.div
+                key={product._id}
+                layoutId={`product-${product._id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -5 }}
+                onClick={() => setSelectedProduct(product)}
+                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group"
+              >
+                <div className="aspect-w-4 aspect-h-3">
+                  <img 
+                    src={product.images[0]} 
+                    alt={product.title}
+                    className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4">
+                  <h2 className="text-lg font-medium text-primary-800 text-center">
+                    {product.title}
+                  </h2>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );
